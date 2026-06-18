@@ -2,12 +2,18 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 import Field from "./Field";
 import Button from "../components/Button";
 
 export default function AuthForm() {
+  const { login, signup, loading: authLoading } = useAuth();
+  const router = useRouter();
+
   const [mode, setMode] = useState("login");
   const [errors, setErrors] = useState({ confirm: "", form: "" });
+  const [submitting, setSubmitting] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,86 +22,23 @@ export default function AuthForm() {
 
   const isLogin = mode === "login";
 
-  async function sendLoginRequest() {
-    const formData = {
-      email,
-      password,
-    };
-
-    try {
-      const response = await fetch("http://localhost:5000/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const jsonResponse = await response.json();
-        console.log("RESPONSE.MESSAGE:", jsonResponse.message);
-
-        throw new Error(jsonResponse.message);
-      }
-
-      const data = await response.json();
-      console.log("Logged in:", data);
-      // I need data.token
-      localStorage.setItem("token", data.token);
-
-      setErrors((prev) => ({ ...prev, form: "" }));
-    } catch (err) {
-      console.error("Error:", err.message);
-      setErrors((prev) => ({ ...prev, form: err.message }));
-    }
-  }
-
   async function handleLogin(e) {
     e.preventDefault();
-    // TODO: store the auth token, then redirect to "/".
-
-    sendLoginRequest();
-
-    // The values you need are already in state:
-    console.log("login submit", { email, password });
-  }
-
-  async function sendSignupRequest() {
-    const formData = {
-      name,
-      email,
-      password,
-    };
+    setSubmitting(true);
+    setErrors((prev) => ({ ...prev, form: "" }));
 
     try {
-      const response = await fetch("http://localhost:5000/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const jsonResponse = await response.json();
-        console.log("RESPONSE.MESSAGE:", jsonResponse.message);
-
-        throw new Error(jsonResponse.message);
-      }
-
-      const data = await response.json();
-      console.log("Signed up:", data);
-      setErrors((prev) => ({ ...prev, form: "" }));
+      await login(email, password);
+      router.push("/");
     } catch (err) {
-      console.error("Error:", err.message);
       setErrors((prev) => ({ ...prev, form: err.message }));
+    } finally {
+      setSubmitting(false);
     }
   }
 
   async function handleSignup(e) {
     e.preventDefault();
-    // TODO: validate the fields (e.g. password === confirm),
-    // call your signup API, then log the user in / redirect to "/".
 
     if (password !== confirm) {
       setErrors((prev) => ({ ...prev, confirm: "Passwords do not match" }));
@@ -103,31 +46,75 @@ export default function AuthForm() {
       return;
     }
 
-    setErrors((prev) => ({ ...prev, confirm: "" }));
+    setSubmitting(true);
+    setErrors({ confirm: "", form: "" });
 
-    // make the post request
-    sendSignupRequest();
+    try {
+      await signup(name, email, password);
+      router.push("/");
+    } catch (err) {
+      setErrors((prev) => ({ ...prev, form: err.message }));
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
-    // The values you need are already in state:
-    console.log("signup submit", { name, email, password, confirm });
+  function switchMode() {
+    setMode(isLogin ? "signup" : "login");
+    setErrors({ confirm: "", form: "" });
+  }
+
+  if (authLoading) {
+    return (
+      <div className="w-full max-w-md mac-card p-8 text-center">
+        <p className="text-xs text-comment tracking-[0.3em] animate-pulse">
+          {"// verifying_session..."}
+        </p>
+      </div>
+    );
   }
 
   return (
-    <div className="w-full max-w-md neon-border bg-panel rounded-lg p-8">
+    <div className="w-full max-w-md mac-card p-8 sm:p-10">
       <Link
         href="/"
-        className="block text-center text-primary neon-text font-bold tracking-[0.3em] mb-1 cursor-pointer"
+        className="block text-center text-primary neon-text font-bold tracking-[0.3em] mb-1 cursor-pointer hover:text-primary-strong transition-colors"
       >
         DEVFORGE
       </Link>
 
-      <p className="text-center text-xs text-muted tracking-widest mb-8">
+      <p className="text-center text-xs text-primary tracking-widest mb-2">
         {"// access_terminal"}
       </p>
 
+      <div className="flex rounded-lg border border-surface-border bg-[#1e1e1e] overflow-hidden mb-8">
+        <button
+          type="button"
+          onClick={() => !isLogin && switchMode()}
+          className={`flex-1 py-2.5 text-xs uppercase tracking-widest transition-colors cursor-pointer ${
+            isLogin
+              ? "bg-white/10 text-foreground border-b-2 border-white"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          Log in
+        </button>
+        <button
+          type="button"
+          onClick={() => isLogin && switchMode()}
+          className={`flex-1 py-2.5 text-xs uppercase tracking-widest transition-colors cursor-pointer ${
+            !isLogin
+              ? "bg-white/10 text-foreground border-b-2 border-white"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          Register
+        </button>
+      </div>
+
       <form
         onSubmit={isLogin ? handleLogin : handleSignup}
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-5"
       >
         {!isLogin && (
           <Field
@@ -135,15 +122,13 @@ export default function AuthForm() {
             label="name"
             type="text"
             value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              setErrors((prev) => ({ ...prev, confirm: "" }));
-            }}
+            onChange={(e) => setName(e.target.value)}
             placeholder="n3on_rider"
           />
         )}
 
         <Field
+          id="email"
           label="email"
           type="email"
           value={email}
@@ -183,35 +168,30 @@ export default function AuthForm() {
           <p
             role="alert"
             aria-live="polite"
-            className="text-xs text-red-400 tracking-widest"
+            className="text-xs text-red-400 tracking-widest px-3 py-2 rounded-sm bg-red-500/10 border border-red-500/30"
           >
             {"// "}
             {errors.form}
           </p>
         )}
 
-        <Button type="submit" variant="primary" className="mt-2 w-full">
-          {isLogin ? "Log in" : "Register"}
+        <Button
+          type="submit"
+          variant="white"
+          className="mt-1 w-full"
+          disabled={submitting}
+        >
+          {submitting
+            ? "Connecting..."
+            : isLogin
+              ? "Log in →"
+              : "Register →"}
         </Button>
       </form>
 
-      <p className="text-center text-xs text-muted mt-6">
-        {isLogin ? "No account yet? " : "Already wired in? "}
-        <button
-          type="button"
-          onClick={() => {
-            setMode(isLogin ? "signup" : "login");
-            setErrors({ confirm: "" });
-          }}
-          className="text-primary hover:text-primary-strong underline underline-offset-4 cursor-pointer"
-        >
-          {isLogin ? "Register" : "Log in"}
-        </button>
-      </p>
-
       <Link
         href="/"
-        className="block text-center text-xs text-muted hover:text-primary mt-4 cursor-pointer"
+        className="block text-center text-xs text-primary hover:text-primary-strong mt-8 cursor-pointer transition-colors"
       >
         ← back to home
       </Link>

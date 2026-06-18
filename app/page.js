@@ -1,4 +1,5 @@
-import Button from "./components/Button";
+import Header from "./components/Header";
+import HeroLoginButton from "./components/HeroLoginButton";
 
 // ── Placeholder content (static — no fetching) ─────────────────────────
 const projects = [
@@ -60,9 +61,8 @@ const snippets = [
   {
     title: "neon.css",
     code: `.glow {
-  color: #00f0ff;
-  text-shadow: 0 0 8px #00f0ff,
-               0 0 24px #00f0ff;
+  color: #ffffff;
+  text-shadow: none;
 }`,
   },
   {
@@ -85,11 +85,30 @@ const members = [
   { handle: "synth_kid", role: "maintainer" },
 ];
 
-function TagChip({ children }) {
+function TagChip({ children, boldWhite = false }) {
+  if (boldWhite) {
+    return (
+      <span className="text-[10px] font-bold uppercase tracking-widest text-foreground border border-white/20 bg-white/5 px-2 py-0.5 rounded-sm">
+        {children}
+      </span>
+    );
+  }
+  return <span className="mac-tag">{children}</span>;
+}
+
+function MacWindow({ title, code }) {
   return (
-    <span className="text-[10px] uppercase tracking-widest text-secondary border border-secondary/50 px-2 py-0.5 rounded-sm">
-      {children}
-    </span>
+    <div className="mac-window">
+      <div className="mac-titlebar">
+        <span className="mac-dot mac-dot-red" aria-hidden="true" />
+        <span className="mac-dot mac-dot-yellow" aria-hidden="true" />
+        <span className="mac-dot mac-dot-green" aria-hidden="true" />
+        <span className="ml-2 text-xs text-muted truncate">{title}</span>
+      </div>
+      <pre className="mac-code">
+        <code>{code}</code>
+      </pre>
+    </div>
   );
 }
 
@@ -98,22 +117,14 @@ function TagChip({ children }) {
 export default function Home() {
   return (
     <div className="flex flex-col flex-1 text-foreground">
-      {/* ── Top nav ─────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between px-6 sm:px-10 py-5 border-b border-panel-border">
-        <span className="glitch neon-text text-primary text-xl font-bold tracking-[0.3em]">
-          DEVFORGE
-        </span>
-        <Button href="/auth" variant="outline" size="sm">
-          &gt; access_terminal
-        </Button>
-      </header>
+      <Header />
 
       {/* ── Hero ────────────────────────────────────────────────── */}
-      <section className="scanlines px-6 sm:px-10 py-20 sm:py-28 text-center border-b border-panel-border">
-        <p className="text-secondary text-xs uppercase tracking-[0.4em] mb-4">
+      <section className="scanlines auth-ambient px-6 sm:px-10 py-20 sm:py-28 text-center border-b border-primary/15 relative">
+        <p className="text-comment text-xs uppercase tracking-[0.4em] mb-4">
           {"// dev grid online"}
         </p>
-        <h1 className="text-4xl sm:text-6xl font-bold text-primary max-w-3xl mx-auto leading-tight">
+        <h1 className="text-4xl sm:text-6xl font-bold text-foreground max-w-3xl mx-auto leading-tight">
           Build in the dark.
           <br />
           Ship at the speed of light.
@@ -122,34 +133,31 @@ export default function Home() {
           DevForge is the underground community for builders, breakers, and
           dreamers. Browse projects, trade snippets, and jack in.
         </p>
-        <Button href="/auth" className="mt-10">
-          Log in →
-        </Button>
+        <HeroLoginButton />
       </section>
 
       {/* ── Projects ────────────────────────────────────────────── */}
       <section className="px-6 sm:px-10 py-16">
-        <h2 className="text-primary neon-text uppercase tracking-[0.3em] text-sm mb-8">
+        <h2 className="text-foreground font-black uppercase tracking-[0.3em] text-base mb-8">
           ## trending_repos
         </h2>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((p) => (
-            <article
-              key={p.name}
-              className="bg-panel border border-panel-border rounded-md p-5 hover:border-primary transition-colors group"
-            >
-              <h3 className="text-primary font-bold">
+            <article key={p.name} className="mac-card p-5 transition-colors">
+              <h3 className="text-foreground font-bold">
                 {p.name}
               </h3>
-              <p className="text-muted text-sm mt-2 min-h-[2.5rem]">
+              <p className="text-primary/90 text-sm mt-2 min-h-[2.5rem]">
                 {p.blurb}
               </p>
               <div className="flex flex-wrap gap-2 mt-4">
                 {p.tags.map((t) => (
-                  <TagChip key={t}>{t}</TagChip>
+                  <TagChip key={t} boldWhite>
+                    {t}
+                  </TagChip>
                 ))}
               </div>
-              <div className="flex gap-5 mt-4 text-xs text-muted">
+              <div className="flex gap-5 mt-4 text-xs font-bold text-foreground">
                 <span>★ {p.stars.toLocaleString()}</span>
                 <span>⑂ {p.forks}</span>
               </div>
@@ -159,45 +167,30 @@ export default function Home() {
       </section>
 
       {/* ── Snippets ────────────────────────────────────────────── */}
-      <section className="px-6 sm:px-10 py-16 border-t border-panel-border">
-        <h2 className="text-primary neon-text uppercase tracking-[0.3em] text-sm mb-8">
+      <section className="px-6 sm:px-10 py-16 border-t border-white/10">
+        <h2 className="text-foreground font-black uppercase tracking-[0.3em] text-base mb-8">
           ## snippet_vault
         </h2>
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-5 lg:grid-cols-3 items-stretch">
           {snippets.map((s) => (
-            <div
-              key={s.title}
-              className="bg-panel border border-panel-border rounded-md overflow-hidden"
-            >
-              <div className="flex items-center gap-2 px-4 py-2 border-b border-panel-border">
-                <span className="w-2 h-2 rounded-full bg-secondary" />
-                <span className="w-2 h-2 rounded-full bg-primary" />
-                <span className="w-2 h-2 rounded-full bg-accent" />
-                <span className="ml-2 text-xs text-muted">
-                  {s.title}
-                </span>
-              </div>
-              <pre className="p-4 text-xs text-accent/90 overflow-x-auto">
-                <code>{s.code}</code>
-              </pre>
-            </div>
+            <MacWindow key={s.title} title={s.title} code={s.code} />
           ))}
         </div>
       </section>
 
       {/* ── Online members ──────────────────────────────────────── */}
-      <section className="px-6 sm:px-10 py-16 border-t border-panel-border">
-        <h2 className="text-primary neon-text uppercase tracking-[0.3em] text-sm mb-8">
+      <section className="px-6 sm:px-10 py-16 border-t border-white/10">
+        <h2 className="text-foreground font-black uppercase tracking-[0.3em] text-base mb-8">
           ## online_now
         </h2>
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {members.map((m) => (
             <li
               key={m.handle}
-              className="flex items-center gap-3 bg-panel border border-panel-border rounded-md px-4 py-3"
+              className="mac-card flex items-center gap-3 px-4 py-3 transition-colors"
             >
-              <span className="pulse-dot w-2.5 h-2.5 rounded-full bg-accent" />
-              <span className="text-primary">@{m.handle}</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+              <span className="text-foreground">@{m.handle}</span>
               <span className="ml-auto text-[10px] uppercase tracking-widest text-muted">
                 {m.role}
               </span>
@@ -207,9 +200,9 @@ export default function Home() {
       </section>
 
       {/* ── Footer ──────────────────────────────────────────────── */}
-      <footer className="mt-auto px-6 sm:px-10 py-8 border-t border-primary/30 text-center text-xs text-muted">
+      <footer className="mt-auto px-6 sm:px-10 py-8 border-t border-white/10 text-center text-xs text-muted">
         <span className="text-primary neon-text tracking-[0.3em]">DEVFORGE</span>{" "}
-        {"// © 2099 — all signals encrypted."}
+        <span className="text-comment">{"// © 2099 — all signals encrypted."}</span>
       </footer>
     </div>
   );

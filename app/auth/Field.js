@@ -2,11 +2,11 @@ import React from "react";
 
 export default function Field({ id, label, error, inputRef, ...props }) {
   const baseClass =
-    "bg-background border rounded-sm px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary focus:shadow-[0_0_8px_rgba(0,240,255,0.4)] transition-shadow";
+    "bg-[#1e1e1e] border rounded-md px-3 py-2.5 text-sm text-foreground placeholder:text-muted/60 field-focus transition-all duration-200";
 
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[10px] uppercase tracking-widest text-foreground/50">
+      <span className="text-[10px] uppercase tracking-widest text-foreground font-bold">
         {label}
       </span>
       <input
@@ -16,7 +16,7 @@ export default function Field({ id, label, error, inputRef, ...props }) {
         aria-describedby={error ? `${id}-error` : undefined}
         {...props}
         required
-        className={`${baseClass} ${error ? "border-red-500" : "border-panel-border"}`}
+        className={`${baseClass} ${error ? "border-red-500" : "border-surface-border"}`}
       />
 
       {error && (

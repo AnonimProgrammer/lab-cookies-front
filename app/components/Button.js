@@ -5,8 +5,8 @@ import Link from "next/link";
  * consistently. Renders a real <button> by default, or a <Link> when an
  * `href` is passed (so call-to-action links share the exact same styling).
  *
- * Color rule: `primary` is always the main-action color (cyan) and
- * `secondary` is always the alternate-action color (magenta). Hover only
+ * Color rule: `primary` is always the main-action color (violet) and
+ * `secondary` is always the alternate-action color (fuchsia). Hover only
  * brightens the same color — the two are never interchanged.
  */
 
@@ -25,9 +25,14 @@ const variants = {
   // solid alternate action
   secondary:
     "bg-secondary text-background hover:bg-secondary-strong focus-visible:ring-secondary",
+  // solid white CTA — hero login, header terminal
+  white:
+    "bg-white text-black hover:bg-neutral-200 focus-visible:ring-white",
+  danger:
+    "bg-red-600 text-white hover:bg-red-500 focus-visible:ring-red-600",
   // bordered, transparent — for lower-emphasis actions
   outline:
-    "border border-primary text-primary hover:bg-primary/10 focus-visible:ring-primary",
+    "border border-white/30 text-white hover:bg-white/10 focus-visible:ring-white",
 };
 
 export default function Button({
